@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>File: README.rdoc</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <meta http-equiv="Content-Script-Type" content="text/javascript" />
+  <link rel="stylesheet" href=".././rdoc-style.css" type="text/css" media="screen" />
+  <script type="text/javascript">
+  // <![CDATA[
+
+  function popupCode( url ) {
+    window.open(url, "Code", "resizable=yes,scrollbars=yes,toolbar=no,status=no,height=150,width=400")
+  }
+
+  function toggleCode( id ) {
+    if ( document.getElementById )
+      elem = document.getElementById( id );
+    else if ( document.all )
+      elem = eval( "document.all." + id );
+    else
+      return false;
+
+    elemStyle = elem.style;
+    
+    if ( elemStyle.display != "block" ) {
+      elemStyle.display = "block"
+    } else {
+      elemStyle.display = "none"
+    }
+
+    return true;
+  }
+  
+  // Make codeblocks hidden by default
+  document.writeln( "<style type=\"text/css\">div.method-source-code { display: none }</style>" )
+  
+  // ]]>
+  </script>
+
+</head>
+<body>
+
+
+
+  <div id="fileHeader">
+    <h1>Chemcaster Java Client</h1>
+    <table class="header-table">
+    <tr class="top-aligned-row">
+      <td><strong>Last Update:</strong></td>
+      <td>Thu Dec 31 17:08:03 -0800 2009</td>
+    </tr>
+    </table>
+  </div>
+  <!-- banner header -->
+
+  <div id="bodyContent">
+
+
+
+  <div id="contextContent">
+
+    <div id="description">
+      <h1><a href="http://chemcaster.com">Chemcaster</a> Java API</h1>
+<p>
+This is the Java interface for the <a
+href="http://chemcaster.com">Chemcaster</a> RESTful Web API. Chemcaster(TM)
+has the basic functionality needed using chemical structure registration,
+storage, imaging, and search.
+</p>
+<h2>Installation</h2>
+<p>
+Include the ChemcasterClient.jar file in your Java classpath.
+</p>
+<p>
+Alternatively, create the jar from the source using:
+</p>
+<pre>
+  ant jar
+</pre>
+<p>
+from the directory containing build.xml. This command will place the jar in
+the root directory of the distribution.
+</p>
+<h2>Example Use</h2>
+<p>
+These examples are found in src/com/chemcaster/client/examples .
+You&#8216;ll need to edit them with a valid username, password, and
+possibly other information for them to run correctly.
+</p>
+<p>
+Note: Any creation of a class or transition between classes (for example,
+selecting a SimpleRegistry from a SimpleService) will throw a
+ClientException on failure.
+</p>
+<h3>Connecting to the Service (ServiceConnect.java)</h3>
+<pre>
+  // connect to Chemcaster using the standard URL
+  SimpleService service;
+  try {
+    service = new SimpleService( username, password);
+  } catch (ClientException ce) {
+    System.err.println(&quot;Connection to the default service failed.&quot;);
+    System.err.println(ce);
+    System.exit(42);
+  }
+</pre>
+<h3>Loading a Registry from a Listing (FirstRegistry.java)</h3>
+<pre>
+   // get the first available service
+   SimpleRegistry registry;
+   try {
+     SimpleService service = new SimpleService( username, password);
+     NameURI services = service.getRegistries();
+     if (services.size() &gt; 0) {
+       registry = service.getSimpleRegistryWithName(services.getName(0));
+     }
+   } catch (ClientException ce) {
+     System.err.println(&quot;Either service connection or registry retrieval failed.&quot;);
+     System.err.println(ce);
+     System.exit(42);
+   }
+</pre>
+<h3>Loading a Registry from a URI (URIRegistry.java)</h3>
+<pre>
+   // connect to a registry based on its URI
+   String URI = &quot;https://chemcaster.com/registries/8675309&quot;;
+   SimpleRegistry registry;
+   try {
+     registry = new SimpleRegistry(URI, username, password);
+   } catch (ClientException ce) {
+     System.err.println(&quot;Registry retrieval based on URI failed.&quot;);
+     System.err.println(ce);
+     System.exit(42);
+   }
+</pre>
+<h3>Creating a Registry (CreateRegistry.java)</h3>
+<pre>
+   SimpleRegistry registry;
+   String registryName = &quot;FIPCO Stockroom&quot;;
+   Boolean deletable = false;
+   try {
+     SimpleService service = new SimpleService( username, password);
+     registry =  new SimpleRegistry(service, registryName, deletable);
+   } catch (ClientException ce) {
+     System.err.println(&quot;Registry creation failed. Possible duplicate&quot;);
+     System.err.println(&quot;name or max registry count exceeded.&quot;);
+     System.err.println(ce);
+     System.exit(42);
+   }
+</pre>
+<h3>Changing a Registry Name (RenameRegistry.java)</h3>
+<pre>
+   // rename the first registry to &quot;FIPCO Warehouse&quot;
+   SimpleRegistry registry;
+   String newName = &quot;FIPCO Warehouse&quot;;
+   try {
+     SimpleService service = new SimpleService( username, password);
+     NameURI services = service.getRegistries();
+     registry = service.getSimpleRegistryWithName(services.getName(0));
+     registry.setName(newName);
+   } catch (ClientException ce) {
+     System.err.println(&quot;Registry connection or rename failed.&quot;);
+     System.err.println(ce);
+     System.exit(42);
+   }
+</pre>
+<h2>API Documentation</h2>
+<p>
+The original documentation for the Chemcaster(TM) service can be found at
+the <a href="http://chemcaster.com/rest">Chemcaster API site</a>. Javadoc
+can be genrated from the source.
+</p>
+<p>
+There are two sets of classes for every functionality described in the API
+documentation: the class named by the resource (Service, Registry, Query,
+etc.), and the simplified version of these (SimpleService, SimpleRegistry,
+SimpleQuery, etc.). The Simple series wraps the named resource classes, and
+embeds the necessary HTTP calls.
+</p>
+<h2>Issues</h2>
+<ul>
+<li>There is some form of mock or functional test for all classes, but the
+functional tests were not included in the distribution at the request of
+Metamolecular LLC.
+
+</li>
+<li>There is no Mock test coverage for ClientHttp or for classes that use it
+(any of the Simple classes). Requires IoC or alternate refactoring.
+
+</li>
+<li>Currently no caching in ClientHttp.
+
+</li>
+</ul>
+
+    </div>
+
+
+   </div>
+
+
+  </div>
+
+
+    <!-- if includes -->
+
+    <div id="section">
+    <!-- if method_list -->
+  </div>
+
+</body>
+</html>
+
+</html>

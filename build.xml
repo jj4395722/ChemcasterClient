@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?eclipse.ant.import?>
+<project basedir="." default="compile" name="ChemcasterClient">
+
+	<property name="full-name" value="ChemcasterClient" />
+	<property name="unix-name" value="ChemcasterClient" />
+	<property name="version" value="0.1" />
+	<property name="source.dir" location="src" />
+	<property name="lib.dir" location="lib" />
+	<property name="build.dir" location="build" />
+	<property name="class.dir" location="${build.dir}/classes" />
+	<property name="jar.dir" location="${build.dir}/jar" />
+	<property name="tgz.dir" location="${build.dir}/tgz" />
+	<property name="doc.dir" location="${build.dir}/doc" />
+	<property name="dist.dir" location="${build.dir}/dist" />
+	<property name="test.dir" location="${build.dir}/test" />
+	<property name="junit.output.dir" value="${build.dir}/junit" />
+	<property name="lib-licenses.file" location="${lib.dir}/LICENSES" />
+	<property name="license.file" location="LICENSE" />
+	<property name="readme.file" location="README" />
+
+	<!-- filesets -->
+	<fileset dir="${lib.dir}" id="libs">
+		<include name="**/*.jar" />
+	</fileset>
+
+	<fileset dir="${lib.dir}" id="test.libs">
+		<include name="**/mockito*.jar" />
+		<include name="**/junit*.jar" />
+		<include name="**/ham*.jar" />
+	</fileset>
+
+	<path id="classpath.base">
+	</path>
+
+	<property environment="env" />
+	<property name="build_files" value="" />
+	<property name="debuglevel" value="source,lines,vars" />
+
+	<target name="init">
+		<mkdir dir="${build.dir}" />
+		<mkdir dir="${class.dir}" />
+		<mkdir dir="${jar.dir}" />
+		<mkdir dir="${doc.dir}" />
+		<mkdir dir="${tgz.dir}" />
+		<mkdir dir="${junit.output.dir}" />
+	</target>
+	<target name="clean">
+		<delete dir="${build.dir}" />
+		<delete dir="${doc.dir}" />
+	</target>
+
+	<target name="compile" depends="init" description="Compile sources.">
+		<javac srcdir="${source.dir}" destdir="${class.dir}" includes="com/chemcaster/client/**/*.java">
+			<classpath>
+				<fileset refid="libs" />
+				<path refid="classpath.base" />
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="jar" depends="compile" description="Create the jarfile.">
+		<jar jarfile="${jar.dir}/${unix-name}-${version}.jar" basedir="${class.dir}" excludes="com/chemcaster/client/test/**,com/chemcaster/client/examples/**,com/chemcaster/client/">
+			<zipgroupfileset dir="lib" excludes="**/mock* **/junit* **/*hamcrest*" />
+			<manifest>
+				<attribute name="Class-Path" value="${manifest.classpath}" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="javadoc">
+		<javadoc sourcepath="${source.dir}" packagenames="*" destdir="${doc.dir}" windowtitle="${full-name} API" excludepackagenames="com.chemcaster.client.test.*,com.chemcaster.client.examples,com.chemcaster.client.*Test">
+			<classpath>
+				<fileset refid="libs" />
+				<path refid="classpath.base" />
+			</classpath>
+		</javadoc>
+	</target>
+
+	<!-- tests -->
+
+	<target name="test" depends="compile" description="Run JUnit tests.">
+		<junit fork="true" printsummary="withOutAndErr" dir="${jar.dir}">
+			<formatter type="xml" />
+			<batchtest todir="${junit.output.dir}">
+				<fileset dir="${class.dir}" includes="**/*Test*.class" excludes="**/*$*.class,**/functional/*" />
+			</batchtest>
+
+			<classpath>
+				<fileset dir="${jar.dir}" includes="*.jar" />
+				<fileset refid="test.libs" />
+				<pathelement location="${class.dir}" />
+				<path refid="classpath.base" />
+			</classpath>
+		</junit>
+
+		<junitreport todir="${junit.output.dir}">
+			<fileset dir="${junit.output.dir}">
+				<include name="TEST-*.xml" />
+			</fileset>
+			<report format="frames" todir="${junit.output.dir}" />
+		</junitreport>
+	</target>
+
+  <!-- functional tests -->
+
+  <path id="ChemcasterClient.classpath">
+				<fileset dir="${jar.dir}" includes="*.jar" />
+				<fileset refid="test.libs" />
+				<pathelement location="${class.dir}" />
+				<path refid="classpath.base" />
+  </path>
+
+	<target name="functionalRegistryTest" depends="jar">
+		<junit fork="yes" printsummary="withOutAndErr">
+			<test name="com.chemcaster.client.test.functional.RegistryTest" />
+			<classpath refid="ChemcasterClient.classpath" />
+		</junit>
+	</target>
+	<target name="functionalRegistrationTest" depends="jar">
+		<junit fork="yes" printsummary="withOutAndErr">
+			<test name="com.chemcaster.client.test.functional.RegistrationTest" />
+			<classpath refid="ChemcasterClient.classpath" />
+		</junit>
+	</target>
+	<target name="functionalSubstanceTest" depends="jar">
+		<java classname="com.chemcaster.client.test.functional.SubstanceTest" failonerror="true" fork="yes">
+			<classpath refid="ChemcasterClient.classpath" />
+		</java>
+	</target>
+	<target name="functionalServiceTest" depends="jar">
+		<junit fork="yes" printsummary="withOutAndErr">
+			<test name="com.chemcaster.client.test.functional.ServiceTest" />
+			<classpath refid="ChemcasterClient.classpath" />
+		</junit>
+	</target>
+	<target name="functionalStructureTest" depends="jar">
+		<java classname="com.chemcaster.client.test.functional.StructureTest" failonerror="true" fork="yes">
+			<classpath refid="ChemcasterClient.classpath" />
+		</java>
+	</target>
+	<target name="functionalImageTest" depends="jar">
+		<java classname="com.chemcaster.client.test.functional.ImageTest" failonerror="true" fork="yes">
+			<classpath refid="ChemcasterClient.classpath" />
+		</java>
+	</target>
+	<target name="functionalArchiveTest" depends="jar">
+		<java classname="com.chemcaster.client.test.functional.ArchiveTest" failonerror="true" fork="yes">
+			<classpath refid="ChemcasterClient.classpath" />
+		</java>
+	</target>
+	<target name="functionalComponentTest" depends="jar">
+		<java classname="com.chemcaster.client.test.functional.ComponentTest" failonerror="true" fork="yes">
+			<classpath refid="ChemcasterClient.classpath" />
+		</java>
+	</target>
+	<target name="functionalExecutionsTest" depends="jar">
+		<java classname="com.chemcaster.client.test.functional.ExecutionsTest" failonerror="true" fork="yes">
+			<classpath refid="ChemcasterClient.classpath" />
+		</java>
+	</target>
+	<target name="functionalLogTest" depends="jar">
+		<java classname="com.chemcaster.client.test.functional.LogTest" failonerror="true" fork="yes">
+			<classpath refid="ChemcasterClient.classpath" />
+		</java>
+	</target>
+	<target name="functionalQueryTest" depends="jar">
+		<java classname="com.chemcaster.client.test.functional.QueryTest" failonerror="true" fork="yes">
+			<classpath refid="ChemcasterClient.classpath" />
+		</java>
+	</target>
+	<target name="functionalSimpleServiceTest" depends="jar">
+		<junit fork="yes" printsummary="withOutAndErr">
+			<formatter type="xml" />
+			<test name="com.chemcaster.client.test.functional.SimpleServiceTest" todir="${junit.output.dir}" />
+			<classpath refid="ChemcasterClient.classpath" />
+		</junit>
+	</target>
+	<target name="functionalSimpleRegistryTest" depends="jar">
+		<junit fork="yes" printsummary="withOutAndErr">
+			<formatter type="xml" />
+			<test name="com.chemcaster.client.test.functional.SimpleRegistryTest" todir="${junit.output.dir}" />
+			<classpath refid="ChemcasterClient.classpath" />
+		</junit>
+	</target>
+	<target name="functionalSimpleRegistrationTest" depends="jar">
+		<junit fork="yes" printsummary="withOutAndErr">
+			<formatter type="xml" />
+			<test name="com.chemcaster.client.test.functional.SimpleRegistrationTest" todir="${junit.output.dir}" />
+			<classpath refid="ChemcasterClient.classpath" />
+		</junit>
+	</target>
+	<target name="functionalSimpleStructureTest" depends="jar">
+		<junit fork="yes" printsummary="withOutAndErr">
+			<formatter type="xml" />
+			<test name="com.chemcaster.client.test.functional.SimpleStructureTest" todir="${junit.output.dir}" />
+			<classpath refid="ChemcasterClient.classpath" />
+		</junit>
+	</target>
+	<target name="functionalSimpleSubstanceTest" depends="jar">
+		<junit fork="yes" printsummary="withOutAndErr">
+			<formatter type="xml" />
+			<test name="com.chemcaster.client.test.functional.SimpleSubstanceTest" todir="${junit.output.dir}" />
+			<classpath refid="ChemcasterClient.classpath" />
+		</junit>
+	</target>
+	<target name="functionalSimpleComponentTest" depends="jar">
+		<junit fork="yes" printsummary="withOutAndErr">
+			<formatter type="xml" />
+			<test name="com.chemcaster.client.test.functional.SimpleComponentTest" todir="${junit.output.dir}" />
+			<classpath refid="ChemcasterClient.classpath" />
+		</junit>
+	</target>
+	<target name="functionalSimpleExecutionTest" depends="jar">
+		<junit fork="yes" printsummary="withOutAndErr">
+			<formatter type="xml" />
+			<test name="com.chemcaster.client.test.functional.SimpleExecutionTest" todir="${junit.output.dir}" />
+			<classpath refid="ChemcasterClient.classpath" />
+		</junit>
+	</target>
+	<target name="functionalSimpleImageTest" depends="jar">
+		<junit fork="yes" printsummary="withOutAndErr">
+			<formatter type="xml" />
+			<test name="com.chemcaster.client.test.functional.SimpleImageTest" todir="${junit.output.dir}" />
+			<classpath refid="ChemcasterClient.classpath" />
+		</junit>
+	</target>
+	<target name="functionalSimpleLogTest" depends="jar">
+		<junit fork="yes" printsummary="withOutAndErr">
+			<formatter type="xml" />
+			<test name="com.chemcaster.client.test.functional.SimpleLogTest" todir="${junit.output.dir}" />
+			<classpath refid="ChemcasterClient.classpath" />
+		</junit>
+	</target>
+	<target name="functionalSimpleQueryTest" depends="jar">
+		<junit fork="yes" printsummary="withOutAndErr">
+			<formatter type="xml" />
+			<test name="com.chemcaster.client.test.functional.SimpleQueryTest" todir="${junit.output.dir}" />
+			<classpath refid="ChemcasterClient.classpath" />
+		</junit>
+	</target>
+
+</project>

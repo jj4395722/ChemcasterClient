@@ -1,0 +1,120 @@
+= Chemcaster[http://chemcaster.com] Java API
+
+This is the Java interface for the Chemcaster[http://chemcaster.com]
+RESTful Web API. Chemcaster(TM) has the basic functionality needed  
+using chemical structure registration, storage, imaging, and
+search.
+
+== Installation
+
+Create the jar from the source using:
+
+  ant jar
+
+from the directory containing build.xml. This command will place the jar
+in the build/jar directory of the distribution. Copy this as needed, and
+place it in your classpath.
+
+== Example Use 
+
+These examples are found in src/com/chemcaster/client/examples . You'll
+need to edit them with a valid username, password, and possibly other
+information for them to run correctly.
+
+Note: Any creation of a class or transition between classes (for example,
+selecting a SimpleRegistry from a SimpleService) will throw
+a ClientException on failure.
+
+=== Connecting to the Service (ServiceConnect.java)
+
+  // connect to Chemcaster using the standard URL
+  SimpleService service;
+  try {
+    service = new SimpleService( username, password);
+  } catch (ClientException ce) {
+    System.err.println("Connection to the default service failed.");
+    System.err.println(ce);
+    System.exit(42);
+  }
+
+=== Loading a Registry from a Listing (FirstRegistry.java)
+
+   // get the first available service
+   SimpleRegistry registry;
+   try {
+     SimpleService service = new SimpleService( username, password);
+     NameURI services = service.getRegistries();
+     if (services.size() > 0) {
+       registry = service.getSimpleRegistryWithName(services.getName(0));
+     }
+   } catch (ClientException ce) {
+     System.err.println("Either service connection or registry retrieval failed.");
+     System.err.println(ce);
+     System.exit(42);
+   }
+
+=== Loading a Registry from a URI (URIRegistry.java)
+
+   // connect to a registry based on its URI
+   String URI = "https://chemcaster.com/registries/8675309";
+   SimpleRegistry registry;
+   try {
+     registry = new SimpleRegistry(URI, username, password);
+   } catch (ClientException ce) {
+     System.err.println("Registry retrieval based on URI failed.");
+     System.err.println(ce);
+     System.exit(42);
+   }
+
+=== Creating a Registry (CreateRegistry.java)
+
+   SimpleRegistry registry;
+   String registryName = "FIPCO Stockroom";
+   Boolean deletable = false;
+   try {
+     SimpleService service = new SimpleService( username, password);
+     registry =  new SimpleRegistry(service, registryName, deletable);
+   } catch (ClientException ce) {
+     System.err.println("Registry creation failed. Possible duplicate");
+     System.err.println("name or max registry count exceeded.");
+     System.err.println(ce);
+     System.exit(42);
+   }
+
+=== Changing a Registry Name (RenameRegistry.java)
+
+   // rename the first registry to "FIPCO Warehouse"
+   SimpleRegistry registry;
+   String newName = "FIPCO Warehouse";
+   try {
+     SimpleService service = new SimpleService( username, password);
+     NameURI services = service.getRegistries();
+     registry = service.getSimpleRegistryWithName(services.getName(0));
+     registry.setName(newName);
+   } catch (ClientException ce) {
+     System.err.println("Registry connection or rename failed.");
+     System.err.println(ce);
+     System.exit(42);
+   }
+
+== API Documentation
+
+The original documentation for the Chemcaster(TM) service can be found at the
+{Chemcaster API site}[http://chemcaster.com/rest]. Javadoc can be genrated from the source.
+
+There are two sets of classes for every functionality described in the API
+documentation: the class named by the resource (Service, Registry, Query,
+etc.), and the simplified version of these (SimpleService, SimpleRegistry,
+SimpleQuery, etc.). The Simple series wraps the named resource classes, and
+embeds the necessary HTTP calls.
+
+== Issues
+
+* There is some form of mock or functional test for all classes, but 
+  the functional tests were not included in the distribution at the
+  request of Metamolecular LLC.
+
+* There is no Mock test coverage for ClientHttp or for classes that use
+  it (any of the Simple classes). Requires IoC or alternate refactoring.
+
+* Currently no caching in ClientHttp.
